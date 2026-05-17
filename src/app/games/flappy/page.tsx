@@ -210,7 +210,8 @@ export default function FlappyGame() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <div className="game-card p-6">
+        <div className="game-card p-6 relative">
+          <MobileGamepad layout="leftright" onAction={jump} actionLabel="FLY" enabled={isPlaying} />
           <div className="flex justify-between mb-4">
             <span className="text-lg font-bold">Skor: {score}</span>
             <span className="text-sm text-gray-400">High Score: {highScore}</span>
@@ -248,8 +249,6 @@ export default function FlappyGame() {
           </p>
         </div>
       </div>
-
-      <MobileGamepad layout="leftright" onAction={jump} actionLabel="FLY" />
     </div>
   );
 }

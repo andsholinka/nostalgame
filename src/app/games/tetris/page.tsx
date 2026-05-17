@@ -227,7 +227,8 @@ export default function TetrisGame() {
 
       <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
         {/* Game board */}
-        <div className="game-card p-3">
+        <div className="game-card p-3 relative">
+          <MobileGamepad layout="dpad" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="DROP" enabled={isPlaying} />
           <div
             className="grid border border-[#2a2a4a]"
             style={{ gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: '1px', background: '#1a1a35' }}
@@ -288,8 +289,6 @@ export default function TetrisGame() {
           <p className="font-mono text-xs text-[#666]">Score: {score} • Lines: {lines}</p>
         </div>
       )}
-
-      <MobileGamepad layout="dpad" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="DROP" />
     </div>
   );
 }

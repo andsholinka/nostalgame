@@ -449,7 +449,8 @@ export default function BounceGame() {
             <span>BEST: <span className="text-[#555]">{highScore}</span></span>
           </div>
 
-          <div className="game-card p-3">
+          <div className="game-card p-3 relative">
+            <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="JUMP" enabled={isPlaying} />
             <canvas
               ref={canvasRef}
               width={W}
@@ -508,8 +509,6 @@ export default function BounceGame() {
           <button onClick={startGame} className="btn-primary">PLAY AGAIN</button>
         </div>
       )}
-
-      <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="JUMP" />
     </div>
   );
 }

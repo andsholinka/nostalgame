@@ -199,7 +199,8 @@ export default function PongGame() {
       </div>
 
       <div className="flex flex-col items-center gap-6">
-        <div className="game-card p-4">
+        <div className="game-card p-4 relative">
+          <MobileGamepad layout="updown" enabled={isPlaying} />
           <canvas
             ref={canvasRef}
             width={CANVAS_W}
@@ -223,8 +224,6 @@ export default function PongGame() {
           <p><span className="neon-green">P1</span>: W / S &nbsp;&nbsp; <span className="neon-cyan">{mode === "ai" ? "AI" : "P2"}</span>: ↑ / ↓</p>
         </div>
       </div>
-
-      <MobileGamepad layout="updown" />
     </div>
   );
 }

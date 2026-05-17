@@ -8,7 +8,6 @@ type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
 
 const GRID_SIZE = 20;
-const CELL_SIZE = 20;
 const INITIAL_SPEED = 150;
 
 export default function SnakeGame() {
@@ -20,8 +19,25 @@ export default function SnakeGame() {
   const [highScore, setHighScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(INITIAL_SPEED);
+  const [cellSize, setCellSize] = useState(20);
   const directionRef = useRef<Direction>("RIGHT");
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Calculate cell size based on screen width
+  useEffect(() => {
+    const calculateSize = () => {
+      const screenWidth = window.innerWidth;
+      // Leave padding: 16px each side + 24px card padding each side = 80px total
+      const availableWidth = Math.min(screenWidth - 80, 400);
+      const size = Math.floor(availableWidth / GRID_SIZE);
+      setCellSize(Math.max(12, Math.min(20, size)));
+    };
+
+    calculateSize();
+    window.addEventListener("resize", calculateSize);
+    return () => window.removeEventListener("resize", calculateSize);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("snake-highscore");
@@ -63,14 +79,12 @@ export default function SnakeGame() {
         case "RIGHT": head.x += 1; break;
       }
 
-      // Check wall collision
       if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
         setGameOver(true);
         setIsPlaying(false);
         return prevSnake;
       }
 
-      // Check self collision
       if (prevSnake.some((s) => s.x === head.x && s.y === head.y)) {
         setGameOver(true);
         setIsPlaying(false);
@@ -79,7 +93,6 @@ export default function SnakeGame() {
 
       const newSnake = [head, ...prevSnake];
 
-      // Check food
       if (head.x === food.x && head.y === food.y) {
         setScore((s) => {
           const newScore = s + 10;
@@ -146,83 +159,100 @@ export default function SnakeGame() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const boardSize = GRID_SIZE * cellSize;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-44 md:pb-8">
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/" className="btn-secondary">← BACK</Link>
-        <h1 className="pixel-font text-sm neon-text">🐍 SNAKE</h1>
+        <h1 className="pixel-font text-sm neon-green">🐍 SNAKE</h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <div className="game-card p-6">
-          <div className="flex justify-between mb-4">
-            <span className="text-lg font-bold">Skor: {score}</span>
-            <span className="text-sm text-gray-400">High Score: {highScore}</span>
+      <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-start">
+        <div className="game-card p-3 md:p-6 w-full max-w-fit mx-auto" ref={containerRef}>
+          <div className="flex justify-between mb-3 px-1">
+            <span className="pixel-font text-[0.5rem] text-[#aaa]">SCORE: <span className="neon-yellow">{score}</span></span>
+            <span className="pixel-font text-[0.45rem] text-[#555]">BEST: {highScore}</span>
           </div>
 
           <div
-            className="relative border-2 border-[#2d2d44] rounded-lg overflow-hidden"
-            style={{ width: GRID_SIZE * CELL_SIZE, height: GRID_SIZE * CELL_SIZE, background: "#0f0f1a" }}
+            className="relative border-2 border-[#2a2a4a] overflow-hidden mx-auto"
+            style={{ width: boardSize, height: boardSize, background: "#0a0a18" }}
           >
-            {/* Food */}
+            {/* Mobile touch control zone */}
+            <MobileGamepad layout="dpad" enabled={isPlaying} />
+
+            {/* Grid lines */}
             <div
-              className="absolute rounded-full bg-red-500"
+              className="absolute inset-0 opacity-10"
               style={{
-                left: food.x * CELL_SIZE + 2,
-                top: food.y * CELL_SIZE + 2,
-                width: CELL_SIZE - 4,
-                height: CELL_SIZE - 4,
+                backgroundImage: `linear-gradient(#2a2a4a 1px, transparent 1px), linear-gradient(90deg, #2a2a4a 1px, transparent 1px)`,
+                backgroundSize: `${cellSize}px ${cellSize}px`,
               }}
             />
+
+            {/* Food */}
+            <div
+              className="absolute rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+              style={{
+                left: food.x * cellSize + 2,
+                top: food.y * cellSize + 2,
+                width: cellSize - 4,
+                height: cellSize - 4,
+              }}
+            />
+
             {/* Snake */}
             {snake.map((segment, i) => (
               <div
                 key={i}
-                className={`absolute rounded-sm ${i === 0 ? "bg-green-400" : "bg-green-600"}`}
+                className="absolute"
                 style={{
-                  left: segment.x * CELL_SIZE + 1,
-                  top: segment.y * CELL_SIZE + 1,
-                  width: CELL_SIZE - 2,
-                  height: CELL_SIZE - 2,
+                  left: segment.x * cellSize + 1,
+                  top: segment.y * cellSize + 1,
+                  width: cellSize - 2,
+                  height: cellSize - 2,
+                  background: i === 0 ? "#39ff14" : "#22c55e",
+                  boxShadow: i === 0 ? "0 0 4px rgba(57,255,20,0.5)" : "none",
+                  borderRadius: i === 0 ? "3px" : "1px",
                 }}
               />
             ))}
 
             {/* Game Over Overlay */}
             {gameOver && (
-              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold text-red-400 mb-2">Game Over!</p>
-                <p className="text-gray-400 mb-4">Skor: {score}</p>
-                <button onClick={resetGame} className="btn-primary">Main Lagi</button>
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+                <p className="pixel-font text-sm text-red-400 mb-2">GAME OVER</p>
+                <p className="font-mono text-xs text-[#888] mb-4">Score: {score}</p>
+                <button onClick={resetGame} className="btn-primary">RETRY</button>
               </div>
             )}
 
             {/* Start Overlay */}
             {!isPlaying && !gameOver && (
-              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-                <p className="text-xl font-bold mb-4">🐍 Snake Game</p>
-                <button onClick={resetGame} className="btn-primary">Mulai</button>
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+                <p className="pixel-font text-[0.6rem] text-[#aaa] mb-4">🐍 SNAKE</p>
+                <button onClick={resetGame} className="btn-primary">START</button>
               </div>
             )}
           </div>
         </div>
 
-        <div className="game-card p-6 w-full lg:w-64">
-          <h3 className="font-bold mb-4">Cara Main</h3>
-          <ul className="text-sm text-gray-400 space-y-2">
-            <li>⬆️ Arrow Up / W</li>
-            <li>⬇️ Arrow Down / S</li>
-            <li>⬅️ Arrow Left / A</li>
-            <li>➡️ Arrow Right / D</li>
-          </ul>
-          <hr className="border-[#2d2d44] my-4" />
-          <p className="text-sm text-gray-400">
-            Makan makanan merah untuk menambah skor. Jangan tabrak dinding atau tubuhmu sendiri!
+        {/* Instructions - hidden on mobile */}
+        <div className="game-card p-5 w-full lg:w-56 hidden lg:block">
+          <h3 className="pixel-font text-[0.5rem] text-[#888] mb-3">CONTROLS</h3>
+          <div className="font-mono text-[0.65rem] text-[#666] space-y-1">
+            <p>↑ / W : Up</p>
+            <p>↓ / S : Down</p>
+            <p>← / A : Left</p>
+            <p>→ / D : Right</p>
+          </div>
+          <hr className="border-[#2a2a4a] my-3" />
+          <p className="font-mono text-[0.6rem] text-[#555] leading-relaxed">
+            Makan makanan merah untuk skor. Jangan tabrak dinding atau tubuhmu!
           </p>
         </div>
       </div>
-
-      <MobileGamepad layout="dpad" />
     </div>
   );
 }

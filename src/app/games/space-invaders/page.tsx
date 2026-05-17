@@ -266,7 +266,8 @@ export default function SpaceInvadersGame() {
           <span>BEST: <span className="text-[#555]">{highScore}</span></span>
         </div>
 
-        <div className="game-card p-3">
+        <div className="game-card p-3 relative">
+          <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="🔫" enabled={isPlaying} />
           <canvas
             ref={canvasRef}
             width={W}
@@ -290,8 +291,6 @@ export default function SpaceInvadersGame() {
           </div>
         )}
       </div>
-
-      <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="🔫" />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 
 type GamepadLayout = "dpad" | "leftright" | "updown";
 
@@ -8,9 +8,9 @@ interface MobileGamepadProps {
   layout?: GamepadLayout;
   onAction?: () => void;
   actionLabel?: string;
+  enabled?: boolean;
 }
 
-// Simulate keyboard events
 function simulateKey(key: string, type: "keydown" | "keyup") {
   const event = new KeyboardEvent(type, {
     key,
@@ -20,166 +20,128 @@ function simulateKey(key: string, type: "keydown" | "keyup") {
   window.dispatchEvent(event);
 }
 
-export function MobileGamepad({ layout = "dpad", onAction, actionLabel = "A" }: MobileGamepadProps) {
-  const activeKeysRef = useRef<Set<string>>(new Set());
+export function MobileGamepad({ layout = "dpad", onAction, actionLabel, enabled = true }: MobileGamepadProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [activeDir, setActiveDir] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const lastKeyRef = useRef<string | null>(null);
+  const touchZoneRef = useRef<HTMLDivElement>(null);
 
-  const pressKey = useCallback((key: string) => {
-    if (!activeKeysRef.current.has(key)) {
-      activeKeysRef.current.add(key);
-      simulateKey(key, "keydown");
-    }
-  }, []);
-
-  const releaseKey = useCallback((key: string) => {
-    if (activeKeysRef.current.has(key)) {
-      activeKeysRef.current.delete(key);
-      simulateKey(key, "keyup");
-    }
-  }, []);
-
-  const releaseAll = useCallback(() => {
-    activeKeysRef.current.forEach((key) => {
-      simulateKey(key, "keyup");
-    });
-    activeKeysRef.current.clear();
-  }, []);
-
-  // Cleanup on unmount
   useEffect(() => {
-    return () => releaseAll();
-  }, [releaseAll]);
-
-  // Only show on touch devices
-  const [isMobile, setIsMobile] = React.useState(false);
-  useEffect(() => {
+    setMounted(true);
     setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
 
-  if (!isMobile) return null;
+  const handleTouch = useCallback((e: React.TouchEvent) => {
+    if (!enabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.touches[0];
+    if (!touch || !touchZoneRef.current) return;
+
+    const rect = touchZoneRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    const dx = x - centerX;
+    const dy = y - centerY;
+
+    let key: string;
+
+    if (layout === "leftright") {
+      key = dx > 0 ? "ArrowRight" : "ArrowLeft";
+    } else if (layout === "updown") {
+      key = dy > 0 ? "ArrowDown" : "ArrowUp";
+    } else {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        key = dx > 0 ? "ArrowRight" : "ArrowLeft";
+      } else {
+        key = dy > 0 ? "ArrowDown" : "ArrowUp";
+      }
+    }
+
+    if (lastKeyRef.current && lastKeyRef.current !== key) {
+      simulateKey(lastKeyRef.current, "keyup");
+    }
+
+    lastKeyRef.current = key;
+    simulateKey(key, "keydown");
+    setActiveDir(key);
+  }, [layout, enabled]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!enabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (lastKeyRef.current) {
+      simulateKey(lastKeyRef.current, "keyup");
+      lastKeyRef.current = null;
+    }
+    setActiveDir(null);
+  }, [enabled]);
+
+  const handleActionTouch = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onAction) {
+      onAction();
+    } else {
+      simulateKey(" ", "keydown");
+      setTimeout(() => simulateKey(" ", "keyup"), 100);
+    }
+  }, [onAction]);
+
+  useEffect(() => {
+    return () => {
+      if (lastKeyRef.current) {
+        simulateKey(lastKeyRef.current, "keyup");
+      }
+    };
+  }, []);
+
+  if (!mounted || !isMobile) return null;
+
+  // Don't show touch zone when not enabled (game not started)
+  if (!enabled) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[70] pb-4 pt-2 pointer-events-none md:hidden">
-      <div className="flex items-end justify-between px-4 max-w-lg mx-auto">
-        {/* D-Pad / Directional controls */}
-        <div className="pointer-events-auto">
-          {layout === "dpad" && <DPad pressKey={pressKey} releaseKey={releaseKey} />}
-          {layout === "leftright" && <LeftRight pressKey={pressKey} releaseKey={releaseKey} />}
-          {layout === "updown" && <UpDown pressKey={pressKey} releaseKey={releaseKey} />}
-        </div>
+    <>
+      {/* Touch zone - covers the game area */}
+      <div
+        ref={touchZoneRef}
+        className="absolute inset-0 z-[10] md:hidden"
+        onTouchStart={handleTouch}
+        onTouchMove={handleTouch}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        style={{ touchAction: "none" }}
+      />
 
-        {/* Action button */}
-        {onAction && (
-          <div className="pointer-events-auto">
-            <button
-              onTouchStart={(e) => { e.preventDefault(); onAction(); }}
-              className="w-16 h-16 rounded-full bg-[#ff6b35]/90 border-2 border-[#ff6b35] flex items-center justify-center active:scale-90 active:bg-[#ff6b35] transition-transform shadow-[0_0_15px_rgba(255,107,53,0.4)]"
-            >
-              <span className="pixel-font text-[0.6rem] text-white font-bold">{actionLabel}</span>
-            </button>
+      {/* Direction indicator */}
+      {activeDir && (
+        <div className="absolute inset-0 z-[11] pointer-events-none md:hidden flex items-center justify-center">
+          <div className="text-4xl opacity-20">
+            {activeDir === "ArrowUp" && "▲"}
+            {activeDir === "ArrowDown" && "▼"}
+            {activeDir === "ArrowLeft" && "◀"}
+            {activeDir === "ArrowRight" && "▶"}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+
+      {/* Action button */}
+      {(onAction || actionLabel) && (
+        <div className="absolute -bottom-20 right-0 z-[12] md:hidden">
+          <button
+            onTouchStart={handleActionTouch}
+            className="w-14 h-14 rounded-full bg-[#ff6b35]/80 border-2 border-[#ff6b35] flex items-center justify-center active:scale-90 active:bg-[#ff6b35] transition-transform shadow-[0_0_15px_rgba(255,107,53,0.4)]"
+          >
+            <span className="pixel-font text-[0.4rem] text-white font-bold">{actionLabel || "A"}</span>
+          </button>
+        </div>
+      )}
+    </>
   );
 }
-
-// Full D-Pad (up/down/left/right)
-function DPad({ pressKey, releaseKey }: { pressKey: (k: string) => void; releaseKey: (k: string) => void }) {
-  return (
-    <div className="relative w-36 h-36">
-      {/* Center circle */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#1a1a35] border border-[#2a2a4a]"></div>
-
-      {/* Up */}
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowUp"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowUp"); }}
-        onTouchCancel={() => releaseKey("ArrowUp")}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-lg">▲</span>
-      </button>
-
-      {/* Down */}
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowDown"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowDown"); }}
-        onTouchCancel={() => releaseKey("ArrowDown")}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-lg">▼</span>
-      </button>
-
-      {/* Left */}
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowLeft"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowLeft"); }}
-        onTouchCancel={() => releaseKey("ArrowLeft")}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-lg">◀</span>
-      </button>
-
-      {/* Right */}
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowRight"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowRight"); }}
-        onTouchCancel={() => releaseKey("ArrowRight")}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-lg">▶</span>
-      </button>
-    </div>
-  );
-}
-
-// Left/Right only (for Pong, Breakout)
-function LeftRight({ pressKey, releaseKey }: { pressKey: (k: string) => void; releaseKey: (k: string) => void }) {
-  return (
-    <div className="flex gap-3">
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowLeft"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowLeft"); }}
-        onTouchCancel={() => releaseKey("ArrowLeft")}
-        className="w-14 h-14 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-xl">◀</span>
-      </button>
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowRight"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowRight"); }}
-        onTouchCancel={() => releaseKey("ArrowRight")}
-        className="w-14 h-14 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-xl">▶</span>
-      </button>
-    </div>
-  );
-}
-
-// Up/Down only (for Pong P1)
-function UpDown({ pressKey, releaseKey }: { pressKey: (k: string) => void; releaseKey: (k: string) => void }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowUp"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowUp"); }}
-        onTouchCancel={() => releaseKey("ArrowUp")}
-        className="w-14 h-14 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-xl">▲</span>
-      </button>
-      <button
-        onTouchStart={(e) => { e.preventDefault(); pressKey("ArrowDown"); }}
-        onTouchEnd={(e) => { e.preventDefault(); releaseKey("ArrowDown"); }}
-        onTouchCancel={() => releaseKey("ArrowDown")}
-        className="w-14 h-14 rounded-lg bg-[#2a2a4a]/80 border border-[#3a3a5a] flex items-center justify-center active:bg-[#39ff14]/20 active:border-[#39ff14] transition-colors"
-      >
-        <span className="text-[#aaa] text-xl">▼</span>
-      </button>
-    </div>
-  );
-}
-
-// Need React import for useState
-import React from "react";

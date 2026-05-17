@@ -5,15 +5,17 @@ import Link from "next/link";
 
 export function AdminPWAButton() {
   const [showButton, setShowButton] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Only show on mobile PWA (standalone mode)
+    setMounted(true);
     const isPWA = window.matchMedia("(display-mode: standalone)").matches;
     const isMobile = window.innerWidth < 768;
     setShowButton(isPWA && isMobile);
   }, []);
 
-  if (!showButton) return null;
+  // Don't render anything until mounted to avoid hydration mismatch
+  if (!mounted || !showButton) return null;
 
   return (
     <div className="flex justify-center py-6">

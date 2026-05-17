@@ -198,7 +198,8 @@ export default function Game2048() {
         </div>
 
         {/* Grid */}
-        <div className="game-card p-4">
+        <div className="game-card p-4 relative">
+          <MobileGamepad layout="dpad" enabled={!gameOver && !won && grid.length > 0} />
           <div className="grid grid-cols-4 gap-2 w-80 h-80">
             {grid.flat().map((value, i) => (
               <div
@@ -231,8 +232,6 @@ export default function Game2048() {
 
         <p className="text-sm text-gray-500">Gunakan Arrow Keys atau WASD untuk menggeser</p>
       </div>
-
-      <MobileGamepad layout="dpad" />
     </div>
   );
 }
