@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #e2e8f0;
-  --card-bg: #1a1a2e;
-  --card-border: #2d2d44;
-  --accent: #7c3aed;
-  --accent-light: #a78bfa;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --bg-dark: #0c0c1d;
+  --bg-card: #12122a;
+  --border: #2a2a4a;
+  --neon-orange: #ff6b35;
+  --neon-green: #39ff14;
+  --neon-pink: #ff1493;
+  --neon-cyan: #00f3ff;
+  --neon-yellow: #ffe600;
+  --neon-purple: #bf5af2;
+  --pixel-shadow: 3px 3px 0px #000;
 }
 
 * {
@@ -17,63 +18,183 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-dark);
+  color: #d4d4e0;
+  font-family: 'Courier New', monospace;
+  overflow-x: hidden;
 }
 
+.pixel-font {
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* ===== ARCADE CABINET FRAME ===== */
+.arcade-frame {
+  background: linear-gradient(180deg, #1a1a35 0%, #0c0c1d 100%);
+  border: 3px solid #2a2a4a;
+  box-shadow: 
+    inset 0 0 30px rgba(0,0,0,0.5),
+    0 0 15px rgba(191, 90, 242, 0.1);
+  position: relative;
+}
+
+.arcade-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.02) 3px,
+    rgba(0,0,0,0.02) 6px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ===== GAME CARDS ===== */
 .game-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 1rem;
-  transition: all 0.3s ease;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.game-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+  transition: left 0.5s;
+}
+
+.game-card:hover::after {
+  left: 100%;
 }
 
 .game-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--accent);
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.2);
+  transform: translateY(-6px) scale(1.02);
+  border-color: var(--neon-purple);
+  box-shadow: 
+    0 10px 40px rgba(191, 90, 242, 0.2),
+    0 0 15px rgba(191, 90, 242, 0.1),
+    inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
+/* ===== BUTTONS ===== */
 .btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, var(--neon-orange), #ff8c42);
+  color: #000;
+  padding: 12px 24px;
   border: none;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  box-shadow: 0 4px 0 #b34400, 0 6px 20px rgba(255, 107, 53, 0.3);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #b34400, 0 8px 30px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #b34400, 0 3px 10px rgba(255, 107, 53, 0.2);
 }
 
 .btn-secondary {
-  background: var(--card-bg);
-  color: var(--foreground);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  border: 1px solid var(--card-border);
+  background: transparent;
+  color: #aaa;
+  padding: 10px 20px;
+  border: 2px solid #3a3a5a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  border-color: var(--accent);
-  background: rgba(124, 58, 237, 0.1);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #7c3aed, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ===== NEON EFFECTS ===== */
+.neon-green { color: var(--neon-green); text-shadow: 0 0 7px var(--neon-green), 0 0 15px rgba(57,255,20,0.4); }
+.neon-pink { color: var(--neon-pink); text-shadow: 0 0 7px var(--neon-pink), 0 0 15px rgba(255,20,147,0.4); }
+.neon-cyan { color: var(--neon-cyan); text-shadow: 0 0 7px var(--neon-cyan), 0 0 15px rgba(0,243,255,0.4); }
+.neon-yellow { color: var(--neon-yellow); text-shadow: 0 0 7px var(--neon-yellow), 0 0 15px rgba(255,230,0,0.4); }
+.neon-orange { color: var(--neon-orange); text-shadow: 0 0 7px var(--neon-orange), 0 0 15px rgba(255,107,53,0.4); }
+.neon-purple { color: var(--neon-purple); text-shadow: 0 0 7px var(--neon-purple), 0 0 15px rgba(191,90,242,0.4); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-.glow {
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes grid-line {
+  0% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+  100% { opacity: 0.03; }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--neon-green); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* ===== GRID BACKGROUND ===== */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(42, 42, 74, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42, 42, 74, 0.3) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #3a3a5a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+/* ===== TICKER ===== */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-scroll { animation: ticker 30s linear infinite; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .pixel-font { letter-spacing: 0; }
 }
