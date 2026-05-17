@@ -4,21 +4,63 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
 const WORDS = [
-  { word: "JAVASCRIPT", hint: "Bahasa pemrograman web" },
-  { word: "KOMPUTER", hint: "Alat elektronik untuk mengolah data" },
-  { word: "INTERNET", hint: "Jaringan global yang menghubungkan dunia" },
-  { word: "ALGORITMA", hint: "Langkah-langkah penyelesaian masalah" },
-  { word: "DATABASE", hint: "Tempat menyimpan data terstruktur" },
-  { word: "FRAMEWORK", hint: "Kerangka kerja untuk membangun aplikasi" },
-  { word: "VARIABEL", hint: "Tempat menyimpan nilai dalam program" },
-  { word: "FUNCTION", hint: "Blok kode yang bisa dipanggil berulang" },
-  { word: "BROWSER", hint: "Aplikasi untuk menjelajah web" },
-  { word: "KEYBOARD", hint: "Alat input untuk mengetik" },
-  { word: "MONITOR", hint: "Layar tampilan komputer" },
-  { word: "PROGRAM", hint: "Kumpulan instruksi untuk komputer" },
-  { word: "WEBSITE", hint: "Halaman yang bisa diakses via internet" },
-  { word: "ANDROID", hint: "Sistem operasi mobile populer" },
-  { word: "PYTHON", hint: "Bahasa pemrograman yang mudah dipelajari" },
+  // Hewan
+  { word: "GAJAH", hint: "Hewan darat terbesar dengan belalai panjang" },
+  { word: "JERAPAH", hint: "Hewan dengan leher paling panjang" },
+  { word: "HARIMAU", hint: "Kucing besar bergaris loreng" },
+  { word: "PINGUIN", hint: "Burung yang tidak bisa terbang dan hidup di kutub" },
+  { word: "KUPUKUPU", hint: "Serangga dengan sayap berwarna-warni" },
+  { word: "BUAYA", hint: "Reptil besar yang hidup di air" },
+
+  // Negara & Kota
+  { word: "INDONESIA", hint: "Negara kepulauan terbesar di dunia" },
+  { word: "JEPANG", hint: "Negara matahari terbit, terkenal dengan sushi" },
+  { word: "JAKARTA", hint: "Ibu kota Indonesia" },
+  { word: "PARIS", hint: "Kota cinta dengan menara Eiffel" },
+  { word: "MESIR", hint: "Negara dengan piramida dan sphinx" },
+  { word: "BRASIL", hint: "Negara terbesar di Amerika Selatan" },
+
+  // Buah & Makanan
+  { word: "MANGGA", hint: "Buah tropis berwarna kuning oranye" },
+  { word: "SEMANGKA", hint: "Buah besar berair, hijau di luar merah di dalam" },
+  { word: "RENDANG", hint: "Makanan khas Padang yang mendunia" },
+  { word: "NASIGORENG", hint: "Makanan Indonesia dari nasi yang digoreng" },
+  { word: "PIZZA", hint: "Makanan Italia dengan keju dan topping" },
+  { word: "BAKSO", hint: "Bola daging dalam kuah, jajanan kaki lima Indonesia" },
+
+  // Olahraga
+  { word: "SEPAKBOLA", hint: "Olahraga paling populer di dunia, 22 pemain" },
+  { word: "BULUTANGKIS", hint: "Olahraga dengan raket dan kok" },
+  { word: "RENANG", hint: "Olahraga di air" },
+  { word: "BASKET", hint: "Olahraga memasukkan bola ke ring" },
+  { word: "VOLI", hint: "Olahraga net dengan 6 pemain per tim" },
+
+  // Alam
+  { word: "GUNUNG", hint: "Bagian permukaan bumi yang menjulang tinggi" },
+  { word: "SAMUDRA", hint: "Hamparan air asin yang sangat luas" },
+  { word: "MATAHARI", hint: "Bintang pusat tata surya" },
+  { word: "BULAN", hint: "Satelit alami Bumi" },
+  { word: "PELANGI", hint: "Lengkungan tujuh warna setelah hujan" },
+
+  // Profesi
+  { word: "DOKTER", hint: "Profesi yang menyembuhkan orang sakit" },
+  { word: "GURU", hint: "Profesi yang mengajar di sekolah" },
+  { word: "PILOT", hint: "Profesi yang menerbangkan pesawat" },
+  { word: "POLISI", hint: "Penjaga keamanan dan ketertiban" },
+  { word: "PETANI", hint: "Profesi yang bercocok tanam" },
+
+  // Sejarah & Budaya
+  { word: "SOEKARNO", hint: "Presiden pertama Indonesia" },
+  { word: "BATIK", hint: "Kain tradisional Indonesia warisan UNESCO" },
+  { word: "BOROBUDUR", hint: "Candi Buddha terbesar di Indonesia" },
+  { word: "WAYANG", hint: "Seni pertunjukan boneka tradisional Jawa" },
+  { word: "ANGKLUNG", hint: "Alat musik bambu khas Sunda" },
+
+  // Sains
+  { word: "OKSIGEN", hint: "Gas yang dihirup makhluk hidup untuk bernafas" },
+  { word: "GRAVITASI", hint: "Gaya tarik bumi yang membuat benda jatuh" },
+  { word: "MAGNET", hint: "Benda yang menarik logam besi" },
+  { word: "EVOLUSI", hint: "Teori perubahan makhluk hidup oleh Darwin" },
 ];
 
 const MAX_WRONG = 6;
