@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 type Grid = number[][];
 
@@ -230,6 +231,8 @@ export default function Game2048() {
 
         <p className="text-sm text-gray-500">Gunakan Arrow Keys atau WASD untuk menggeser</p>
       </div>
+
+      <MobileGamepad layout="dpad" />
     </div>
   );
 }

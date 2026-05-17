@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
@@ -220,6 +221,8 @@ export default function SnakeGame() {
           </p>
         </div>
       </div>
+
+      <MobileGamepad layout="dpad" />
     </div>
   );
 }

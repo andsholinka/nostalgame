@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 const CANVAS_W = 600;
 const CANVAS_H = 400;
@@ -222,6 +223,8 @@ export default function PongGame() {
           <p><span className="neon-green">P1</span>: W / S &nbsp;&nbsp; <span className="neon-cyan">{mode === "ai" ? "AI" : "P2"}</span>: ↑ / ↓</p>
         </div>
       </div>
+
+      <MobileGamepad layout="updown" />
     </div>
   );
 }

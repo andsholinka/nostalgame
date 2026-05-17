@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 600;
@@ -247,6 +248,8 @@ export default function FlappyGame() {
           </p>
         </div>
       </div>
+
+      <MobileGamepad layout="leftright" onAction={jump} actionLabel="FLY" />
     </div>
   );
 }

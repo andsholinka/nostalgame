@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 const COLS = 10;
 const ROWS = 20;
@@ -287,6 +288,8 @@ export default function TetrisGame() {
           <p className="font-mono text-xs text-[#666]">Score: {score} • Lines: {lines}</p>
         </div>
       )}
+
+      <MobileGamepad layout="dpad" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="DROP" />
     </div>
   );
 }

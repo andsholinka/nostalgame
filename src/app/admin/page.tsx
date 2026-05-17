@@ -109,24 +109,44 @@ export default function AdminDashboard() {
 
   const enableNotifications = async () => {
     try {
+      // Check if notifications are supported
+      if (!("Notification" in window)) {
+        setNotifStatus("❌ Browser tidak support notifikasi");
+        return;
+      }
+
+      if (!("serviceWorker" in navigator)) {
+        setNotifStatus("❌ Service Worker tidak tersedia");
+        return;
+      }
+
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setNotifStatus("Notifikasi ditolak oleh browser");
+        setNotifStatus("❌ Notifikasi ditolak. Cek pengaturan browser.");
         return;
       }
 
+      // Wait for service worker to be ready
+      setNotifStatus("⏳ Menunggu service worker...");
       const registration = await navigator.serviceWorker.ready;
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-      if (!vapidKey) {
-        setNotifStatus("VAPID key belum dikonfigurasi");
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey || vapidKey === "placeholder") {
+        setNotifStatus("❌ VAPID key belum dikonfigurasi di server");
         return;
       }
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
+      setNotifStatus("⏳ Subscribing...");
+
+      // Check existing subscription
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+      }
 
       const token = localStorage.getItem("admin-token");
       const res = await fetch("/api/push/subscribe", {
@@ -143,11 +163,12 @@ export default function AdminDashboard() {
         setNotifEnabled(true);
         setNotifStatus("✅ Notifikasi aktif!");
       } else {
-        setNotifStatus("Gagal subscribe notifikasi");
+        const data = await res.json();
+        setNotifStatus(`❌ Gagal: ${data.error || "Unknown error"}`);
       }
     } catch (err) {
-      console.error(err);
-      setNotifStatus("Error mengaktifkan notifikasi");
+      console.error("Notification error:", err);
+      setNotifStatus(`❌ Error: ${err instanceof Error ? err.message : "Unknown"}`);
     }
   };
 

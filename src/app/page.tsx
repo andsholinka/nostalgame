@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminPWAButton } from "@/components/AdminPWAButton";
 
 const games = [
   {
@@ -385,6 +386,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Admin button - only visible on mobile PWA */}
+      <AdminPWAButton />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 const W = 480;
 const H = 640;
@@ -507,6 +508,8 @@ export default function BounceGame() {
           <button onClick={startGame} className="btn-primary">PLAY AGAIN</button>
         </div>
       )}
+
+      <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="JUMP" />
     </div>
   );
 }

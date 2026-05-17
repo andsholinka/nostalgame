@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { MobileGamepad } from "@/components/MobileGamepad";
 
 const W = 480;
 const H = 560;
@@ -289,6 +290,8 @@ export default function SpaceInvadersGame() {
           </div>
         )}
       </div>
+
+      <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="🔫" />
     </div>
   );
 }
