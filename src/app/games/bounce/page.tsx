@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 const W = 480;
 const H = 640;
@@ -449,13 +449,12 @@ export default function BounceGame() {
             <span>BEST: <span className="text-[#555]">{highScore}</span></span>
           </div>
 
-          <div className="game-card p-3 relative">
-            <MobileGamepad layout="leftright" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="JUMP" enabled={isPlaying} />
+          <div className="game-card p-3">
             <canvas
               ref={canvasRef}
               width={W}
               height={H}
-              className="border border-[#2a2a4a] block max-w-full"
+              className="border border-[#2a2a4a] block w-full max-w-full h-auto"
             />
           </div>
         </div>
@@ -509,6 +508,14 @@ export default function BounceGame() {
           <button onClick={startGame} className="btn-primary">PLAY AGAIN</button>
         </div>
       )}
+
+      {/* Mobile controls */}
+      <GamePad
+        layout="leftright"
+        accent="#e63946"
+        continuous={true}
+        actionButton={{ label: "JUMP", key: " ", code: "Space", color: "#39ff14" }}
+      />
     </div>
   );
 }

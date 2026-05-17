@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 600;
@@ -210,8 +210,7 @@ export default function FlappyGame() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <div className="game-card p-6 relative">
-          <MobileGamepad layout="leftright" onAction={jump} actionLabel="FLY" enabled={isPlaying} />
+        <div className="game-card p-3 md:p-6">
           <div className="flex justify-between mb-4">
             <span className="text-lg font-bold">Skor: {score}</span>
             <span className="text-sm text-gray-400">High Score: {highScore}</span>
@@ -223,7 +222,7 @@ export default function FlappyGame() {
               width={CANVAS_WIDTH}
               height={CANVAS_HEIGHT}
               onClick={jump}
-              className="rounded-lg cursor-pointer border-2 border-[#2d2d44]"
+              className="rounded-lg cursor-pointer border-2 border-[#2d2d44] w-full max-w-full h-auto"
             />
 
             {gameOver && (
@@ -249,6 +248,12 @@ export default function FlappyGame() {
           </p>
         </div>
       </div>
+
+      {/* Mobile jump button */}
+      <GamePad
+        layout="action-only"
+        actionButton={{ label: "🐦 FLY", onAction: jump, color: "#ffe600" }}
+      />
     </div>
   );
 }

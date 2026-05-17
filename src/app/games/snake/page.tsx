@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT";
@@ -179,9 +179,6 @@ export default function SnakeGame() {
             className="relative border-2 border-[#2a2a4a] overflow-hidden mx-auto"
             style={{ width: boardSize, height: boardSize, background: "#0a0a18" }}
           >
-            {/* Mobile touch control zone */}
-            <MobileGamepad layout="dpad" enabled={isPlaying} />
-
             {/* Grid lines */}
             <div
               className="absolute inset-0 opacity-10"
@@ -236,6 +233,9 @@ export default function SnakeGame() {
               </div>
             )}
           </div>
+
+          {/* Mobile D-Pad below game */}
+          <GamePad layout="dpad" accent="#39ff14" continuous={false} />
         </div>
 
         {/* Instructions - hidden on mobile */}

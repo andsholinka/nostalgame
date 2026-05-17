@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 const CANVAS_W = 600;
 const CANVAS_H = 400;
@@ -58,9 +58,9 @@ export default function PongGame() {
     const s = stateRef.current;
     const keys = keysRef.current;
 
-    // Move paddles
-    if (keys.has("w") || keys.has("W")) s.p1Y = Math.max(0, s.p1Y - PADDLE_SPEED);
-    if (keys.has("s") || keys.has("S")) s.p1Y = Math.min(CANVAS_H - PADDLE_H, s.p1Y + PADDLE_SPEED);
+    // Move paddles - P1 (W/S or arrow keys for mobile in AI mode)
+    if (keys.has("w") || keys.has("W") || (mode === "ai" && keys.has("ArrowUp"))) s.p1Y = Math.max(0, s.p1Y - PADDLE_SPEED);
+    if (keys.has("s") || keys.has("S") || (mode === "ai" && keys.has("ArrowDown"))) s.p1Y = Math.min(CANVAS_H - PADDLE_H, s.p1Y + PADDLE_SPEED);
 
     if (mode === "pvp") {
       if (keys.has("ArrowUp")) s.p2Y = Math.max(0, s.p2Y - PADDLE_SPEED);
@@ -199,13 +199,12 @@ export default function PongGame() {
       </div>
 
       <div className="flex flex-col items-center gap-6">
-        <div className="game-card p-4 relative">
-          <MobileGamepad layout="updown" enabled={isPlaying} />
+        <div className="game-card p-3 md:p-4">
           <canvas
             ref={canvasRef}
             width={CANVAS_W}
             height={CANVAS_H}
-            className="border border-[#2a2a4a] block max-w-full"
+            className="border border-[#2a2a4a] block w-full max-w-full h-auto"
             style={{ imageRendering: "pixelated" }}
           />
         </div>
@@ -224,6 +223,9 @@ export default function PongGame() {
           <p><span className="neon-green">P1</span>: W / S &nbsp;&nbsp; <span className="neon-cyan">{mode === "ai" ? "AI" : "P2"}</span>: ↑ / ↓</p>
         </div>
       </div>
+
+      {/* Mobile up/down controls */}
+      <GamePad layout="updown" accent="#39ff14" continuous={true} />
     </div>
   );
 }

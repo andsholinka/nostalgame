@@ -2,23 +2,26 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 const COLS = 10;
 const ROWS = 20;
-const CELL = 28;
 
 const SHAPES = [
-  { shape: [[1,1,1,1]], color: "#00f3ff" },           // I
-  { shape: [[1,1],[1,1]], color: "#ffe600" },          // O
-  { shape: [[0,1,0],[1,1,1]], color: "#bf5af2" },      // T
-  { shape: [[1,0,0],[1,1,1]], color: "#ff6b35" },      // L
-  { shape: [[0,0,1],[1,1,1]], color: "#3b82f6" },      // J
-  { shape: [[0,1,1],[1,1,0]], color: "#39ff14" },      // S
-  { shape: [[1,1,0],[0,1,1]], color: "#ff4444" },      // Z
+  { shape: [[1,1,1,1]], color: "#00f3ff" },
+  { shape: [[1,1],[1,1]], color: "#ffe600" },
+  { shape: [[0,1,0],[1,1,1]], color: "#bf5af2" },
+  { shape: [[1,0,0],[1,1,1]], color: "#ff6b35" },
+  { shape: [[0,0,1],[1,1,1]], color: "#3b82f6" },
+  { shape: [[0,1,1],[1,1,0]], color: "#39ff14" },
+  { shape: [[1,1,0],[0,1,1]], color: "#ff4444" },
 ];
 
 type Grid = (string | null)[][];
+
+function createEmptyGrid(): Grid {
+  return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+}
 
 export default function TetrisGame() {
   const [grid, setGrid] = useState<Grid>(createEmptyGrid());
@@ -28,6 +31,7 @@ export default function TetrisGame() {
   const [gameOver, setGameOver] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [highScore, setHighScore] = useState(0);
+  const [cellSize, setCellSize] = useState(28);
 
   const pieceRef = useRef<{ shape: number[][]; color: string; x: number; y: number } | null>(null);
   const gridRef = useRef<Grid>(createEmptyGrid());
@@ -36,9 +40,20 @@ export default function TetrisGame() {
   const linesRef = useRef(0);
   const levelRef = useRef(1);
 
-  function createEmptyGrid(): Grid {
-    return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-  }
+  // Calculate cell size based on screen width
+  useEffect(() => {
+    const calculateSize = () => {
+      const screenWidth = window.innerWidth;
+      // Mobile: leave 32px total padding
+      const availableWidth = Math.min(screenWidth - 48, 350);
+      const size = Math.floor(availableWidth / COLS);
+      setCellSize(Math.max(18, Math.min(28, size)));
+    };
+
+    calculateSize();
+    window.addEventListener("resize", calculateSize);
+    return () => window.removeEventListener("resize", calculateSize);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("tetris-highscore");
@@ -80,7 +95,6 @@ export default function TetrisGame() {
       }
     }
 
-    // Clear lines
     let cleared = 0;
     for (let r = ROWS - 1; r >= 0; r--) {
       if (g[r].every(cell => cell !== null)) {
@@ -104,7 +118,6 @@ export default function TetrisGame() {
     gridRef.current = g;
     setGrid([...g]);
 
-    // New piece
     const newPiece = randomPiece();
     if (!isValid(newPiece.shape, newPiece.x, newPiece.y, g)) {
       setGameOver(true);
@@ -176,8 +189,25 @@ export default function TetrisGame() {
           break;
         case "ArrowUp":
         case "w": {
-          const rotated = piece.shape[0].map((_, i) => piece.shape.map(row => row[i]).reverse());
-          if (isValid(rotated, piece.x, piece.y, gridRef.current)) piece.shape = rotated;
+          // Rotate clockwise: transpose then reverse each row
+          const rotated = piece.shape[0].map((_, colIndex) =>
+            piece.shape.map(row => row[colIndex]).reverse()
+          );
+
+          // Try standard position first
+          if (isValid(rotated, piece.x, piece.y, gridRef.current)) {
+            piece.shape = rotated;
+          } else {
+            // Wall kicks - try to shift the piece so rotation fits
+            const kicks = [-1, 1, -2, 2];
+            for (const offset of kicks) {
+              if (isValid(rotated, piece.x + offset, piece.y, gridRef.current)) {
+                piece.x += offset;
+                piece.shape = rotated;
+                break;
+              }
+            }
+          }
           break;
         }
         case " ":
@@ -219,36 +249,68 @@ export default function TetrisGame() {
   const displayGrid = renderGrid();
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-8 md:pb-8">
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/" className="btn-secondary">← BACK</Link>
         <h1 className="pixel-font text-sm neon-cyan">🧩 TETRIS</h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+      {/* Mobile stats bar - compact, above board */}
+      <div className="md:hidden grid grid-cols-4 gap-2 mb-4">
+        <div className="game-card px-2 py-2 text-center">
+          <p className="pixel-font text-[0.35rem] text-[#555]">SCORE</p>
+          <p className="pixel-font text-[0.55rem] neon-yellow mt-1">{score}</p>
+        </div>
+        <div className="game-card px-2 py-2 text-center">
+          <p className="pixel-font text-[0.35rem] text-[#555]">LINES</p>
+          <p className="pixel-font text-[0.55rem] neon-green mt-1">{lines}</p>
+        </div>
+        <div className="game-card px-2 py-2 text-center">
+          <p className="pixel-font text-[0.35rem] text-[#555]">LEVEL</p>
+          <p className="pixel-font text-[0.55rem] neon-cyan mt-1">{level}</p>
+        </div>
+        <div className="game-card px-2 py-2 text-center">
+          <p className="pixel-font text-[0.35rem] text-[#555]">BEST</p>
+          <p className="pixel-font text-[0.55rem] text-[#666] mt-1">{highScore}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center">
         {/* Game board */}
-        <div className="game-card p-3 relative">
-          <MobileGamepad layout="dpad" onAction={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); }} actionLabel="DROP" enabled={isPlaying} />
+        <div className="game-card p-2 md:p-3 relative">
           <div
-            className="grid border border-[#2a2a4a]"
-            style={{ gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`, gap: '1px', background: '#1a1a35' }}
+            className="grid border border-[#2a2a4a] mx-auto"
+            style={{ gridTemplateColumns: `repeat(${COLS}, ${cellSize}px)`, gap: '1px', background: '#1a1a35' }}
           >
             {displayGrid.flat().map((cell, i) => (
               <div
                 key={i}
                 style={{
-                  width: CELL,
-                  height: CELL,
+                  width: cellSize,
+                  height: cellSize,
                   background: cell || '#0c0c1d',
                   border: cell ? '1px solid rgba(255,255,255,0.2)' : '1px solid #12122a',
                 }}
               />
             ))}
           </div>
+
+          {/* Mobile START/RETRY overlay */}
+          {!isPlaying && (
+            <div className="md:hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+              <p className="pixel-font text-sm text-[#aaa] mb-1">🧩 TETRIS</p>
+              {gameOver && (
+                <p className="font-mono text-xs text-[#888] mb-3">Score: {score}</p>
+              )}
+              <button onClick={startGame} className="btn-primary mt-3">
+                {gameOver ? "RETRY" : "START"}
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Side panel */}
-        <div className="game-card p-5 w-full lg:w-48 space-y-4">
+        {/* Side panel - desktop only */}
+        <div className="hidden lg:block game-card p-5 w-48 space-y-4">
           <div>
             <p className="pixel-font text-[0.4rem] text-[#555] mb-1">SCORE</p>
             <p className="pixel-font text-sm neon-yellow">{score}</p>
@@ -283,8 +345,16 @@ export default function TetrisGame() {
         </div>
       </div>
 
+      {/* Mobile D-Pad below game */}
+      <GamePad
+        layout="dpad"
+        accent="#00f3ff"
+        continuous={false}
+        centerButton={{ label: "DROP", key: " ", code: "Space", color: "#ff6b35" }}
+      />
+
       {gameOver && (
-        <div className="game-card p-6 text-center mt-6 max-w-sm mx-auto">
+        <div className="hidden md:block game-card p-6 text-center mt-6 max-w-sm mx-auto">
           <p className="pixel-font text-sm neon-pink mb-3">GAME OVER</p>
           <p className="font-mono text-xs text-[#666]">Score: {score} • Lines: {lines}</p>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MobileGamepad } from "@/components/MobileGamepad";
+import { GamePad } from "@/components/GamePad";
 
 type Grid = number[][];
 
@@ -15,6 +15,18 @@ export default function Game2048() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [hasWon, setHasWon] = useState(false);
+  const [tileSize, setTileSize] = useState(72);
+
+  useEffect(() => {
+    const calculate = () => {
+      const screenWidth = window.innerWidth;
+      const available = Math.min(screenWidth - 64, 320);
+      setTileSize(Math.floor((available - 12) / 4));
+    };
+    calculate();
+    window.addEventListener("resize", calculate);
+    return () => window.removeEventListener("resize", calculate);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("2048-bestscore");
@@ -118,7 +130,6 @@ export default function Game2048() {
       localStorage.setItem("2048-bestscore", newScore.toString());
     }
 
-    // Check win
     if (!hasWon) {
       for (const row of newGrid) {
         if (row.includes(2048)) {
@@ -129,7 +140,6 @@ export default function Game2048() {
       }
     }
 
-    // Check game over
     if (isGameOver(newGrid)) {
       setGameOver(true);
     }
@@ -178,33 +188,40 @@ export default function Game2048() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/" className="btn-secondary">← BACK</Link>
         <h1 className="pixel-font text-sm" style={{color: '#ffaa00', textShadow: '0 0 10px #ffaa00'}}>🔢 2048</h1>
       </div>
 
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-5">
         {/* Scores */}
-        <div className="flex gap-6">
-          <div className="game-card px-6 py-3 text-center">
-            <p className="text-xs text-gray-400">Skor</p>
-            <p className="text-2xl font-bold">{score}</p>
+        <div className="flex gap-4">
+          <div className="game-card px-5 py-2 text-center">
+            <p className="pixel-font text-[0.4rem] text-[#555]">SCORE</p>
+            <p className="pixel-font text-sm neon-yellow mt-1">{score}</p>
           </div>
-          <div className="game-card px-6 py-3 text-center">
-            <p className="text-xs text-gray-400">Best</p>
-            <p className="text-2xl font-bold text-yellow-400">{bestScore}</p>
+          <div className="game-card px-5 py-2 text-center">
+            <p className="pixel-font text-[0.4rem] text-[#555]">BEST</p>
+            <p className="pixel-font text-sm text-[#666] mt-1">{bestScore}</p>
           </div>
         </div>
 
         {/* Grid */}
-        <div className="game-card p-4 relative">
-          <MobileGamepad layout="dpad" enabled={!gameOver && !won && grid.length > 0} />
-          <div className="grid grid-cols-4 gap-2 w-80 h-80">
+        <div className="game-card p-3">
+          <div
+            className="grid grid-cols-4 gap-2"
+            style={{ width: tileSize * 4 + 24, height: tileSize * 4 + 24 }}
+          >
             {grid.flat().map((value, i) => (
               <div
                 key={i}
-                className={`flex items-center justify-center rounded-lg font-bold text-lg transition-all ${getTileColor(value)}`}
+                className={`flex items-center justify-center rounded-lg font-bold transition-all ${getTileColor(value)}`}
+                style={{
+                  width: tileSize,
+                  height: tileSize,
+                  fontSize: value >= 1000 ? tileSize * 0.28 : value >= 100 ? tileSize * 0.32 : tileSize * 0.4,
+                }}
               >
                 {value > 0 ? value : ""}
               </div>
@@ -214,24 +231,25 @@ export default function Game2048() {
 
         {/* Game Over / Win */}
         {(gameOver || won) && (
-          <div className="game-card p-6 text-center">
-            <p className={`text-2xl font-bold mb-2 ${won ? "text-green-400" : "text-red-400"}`}>
-              {won ? "🎉 Kamu Menang!" : "💀 Game Over!"}
+          <div className="game-card p-5 text-center">
+            <p className={`pixel-font text-sm mb-2 ${won ? "neon-green" : "neon-pink"}`}>
+              {won ? "🎉 YOU WIN!" : "💀 GAME OVER"}
             </p>
-            <p className="text-gray-400 mb-4">Skor Akhir: {score}</p>
+            <p className="font-mono text-xs text-[#666] mb-4">Score: {score}</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={initGame} className="btn-primary">Main Lagi</button>
+              <button onClick={initGame} className="btn-primary">RETRY</button>
               {won && (
-                <button onClick={() => setWon(false)} className="btn-secondary">Lanjut Main</button>
+                <button onClick={() => setWon(false)} className="btn-secondary">CONTINUE</button>
               )}
             </div>
           </div>
         )}
 
-        <button onClick={initGame} className="btn-secondary text-sm">New Game</button>
-
-        <p className="text-sm text-gray-500">Gunakan Arrow Keys atau WASD untuk menggeser</p>
+        <button onClick={initGame} className="btn-secondary text-xs">NEW GAME</button>
       </div>
+
+      {/* Mobile D-Pad */}
+      <GamePad layout="dpad" accent="#bf5af2" continuous={false} />
     </div>
   );
 }
